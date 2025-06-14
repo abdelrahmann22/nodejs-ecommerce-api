@@ -1,5 +1,4 @@
 const express = require("express");
-const asyncHandler = require("express-async-handler");
 const {
   getCategories,
   getCategory,
@@ -7,15 +6,22 @@ const {
   updateCategory,
   deleteCategory,
 } = require("../services/categoryService");
+const validatorMiddleware = require("../middlewares/validatorMiddleware");
+const {
+  getCategoryValidator,
+  updateCategoryValidator,
+  deleteCategoryValidator,
+  createCategoryValidator,
+} = require("../utils/validators/categoryValidator");
 const router = express.Router();
 
 router
   .route("/")
-  .get(asyncHandler(getCategories))
-  .post(asyncHandler(createCategory));
+  .get(getCategories)
+  .post(createCategoryValidator, validatorMiddleware, createCategory);
 router
   .route("/:id")
-  .get(asyncHandler(getCategory))
-  .put(asyncHandler(updateCategory))
-  .delete(asyncHandler(deleteCategory));
+  .get(getCategoryValidator, validatorMiddleware, getCategory)
+  .put(updateCategoryValidator, validatorMiddleware, updateCategory)
+  .delete(deleteCategoryValidator, validatorMiddleware, deleteCategory);
 module.exports = router;
