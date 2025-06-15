@@ -2,6 +2,7 @@ const slugify = require("slugify");
 const asyncHandler = require("express-async-handler");
 const Category = require("../models/categoryModel");
 const AppError = require("../utils/appError");
+
 // @desc Get list of categories
 // @route GET /api/v1/categories
 // @access Public
@@ -16,7 +17,6 @@ exports.getCategories = async (req, res) => {
 // @desc Get Specific category by id
 // @route GET /api/v1/categories/:id
 // @access public
-
 exports.getCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const category = await Category.findById(id);
@@ -54,7 +54,7 @@ exports.updateCategory = asyncHandler(async (req, res, next) => {
 
 // @desc Delete Specific Category
 // @route DELETE /api/v1/categories/:id
-
+// @access Private
 exports.deleteCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const category = await Category.findByIdAndDelete(id);
