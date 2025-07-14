@@ -1,27 +1,45 @@
 const slugify = require("slugify");
 const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/appError");
+const QueryBuilder = require("../utils/queryBuilder");
 
 const SubCategory = require("../models/subCategoryModel");
 
-// @desc Get list of categories
-// @route GET /api/v1/subcategories
-// @access Public
+/**
+ * @desc Get list of subcategories
+ * @route GET /api/v1/subcategories
+ * @access Public
+ */
 exports.getSubCategories = asyncHandler(async (req, res) => {
-  const page = req.query.page * 1 || 1;
-  const limit = req.query.limit * 1 || 5;
-  const skip = (page - 1) * limit;
-  let filter = {};
-  if (req.params.categoryId) filter = { category: req.params.categoryId };
+  // Handle category filtering if categoryId is in params
+  let baseQuery = SubCategory.find();
+  if (req.params.categoryId) {
+    baseQuery = SubCategory.find({ category: req.params.categoryId });
+  }
 
-  const categories = await SubCategory.find(filter).skip(skip).limit(limit);
+  // Build query
+  const query = new QueryBuilder(baseQuery, req.query)
+    .filter()
+    .search(["name"]) // Search in subcategory name
+    .sort()
+    .limitFields()
+    .paginate();
 
-  res.status(200).json({ results: categories.length, page, data: categories });
+  // Execute
+  const subcategories = await query.mongooseQuery;
+
+  res.status(200).json({
+    results: subcategories.length,
+    page: query.pagination.page,
+    data: subcategories,
+  });
 });
 
-// @desc Create list of subcategories
-// @route POST /api/v1/subcategories
-// @access private
+/**
+ * @desc Create list of subcategories
+ * @route POST /api/v1/subcategories
+ * @access private
+ */
 exports.createSubCategory = asyncHandler(async (req, res, next) => {
   if (!req.body.category && req.params.categoryId) {
     req.body.category = req.params.categoryId;
@@ -37,9 +55,11 @@ exports.createSubCategory = asyncHandler(async (req, res, next) => {
   });
   res.status(201).json({ data: subCategory });
 });
-// @desc Get a subCategory
-// @route GET /api/v1/subcategories/:id
-// @access Public
+/**
+ * @desc Get a subCategory
+ * @route GET /api/v1/subcategories/:id
+ * @access Public
+ */
 exports.getSubCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const category = await SubCategory.findById(id);
@@ -48,9 +68,11 @@ exports.getSubCategory = asyncHandler(async (req, res, next) => {
   }
   res.status(200).json({ data: category });
 });
-// @desc Update subcategory
-// @route PUT /api/v1/subcategories/:id
-// @access private
+/**
+ * @desc Update subcategory
+ * @route PUT /api/v1/subcategories/:id
+ * @access private
+ */
 exports.updateSubCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { name, category } = req.body;
@@ -58,7 +80,7 @@ exports.updateSubCategory = asyncHandler(async (req, res, next) => {
   const subCategory = await SubCategory.findOneAndUpdate(
     { _id: id },
     { name, slug: slugify(name), category },
-    { new: true },
+    { new: true }
   );
 
   if (!subCategory) {
@@ -66,9 +88,11 @@ exports.updateSubCategory = asyncHandler(async (req, res, next) => {
   }
   res.status(201).json({ data: subCategory });
 });
-// @desc Delete subcategory
-// @route DELETE /api/v1/subcategories/:id
-// @access private
+/**
+ * @desc Delete subcategory
+ * @route DELETE /api/v1/subcategories/:id
+ * @access private
+ */
 exports.deleteSubCategory = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 

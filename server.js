@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
+const qs = require("qs");
 
 dotenv.config({ path: "config.env" });
 const AppError = require("./utils/appError.js");
@@ -14,6 +15,8 @@ dbConnection();
 // Express app
 const app = express();
 
+// Configure query parser to use qs for bracket notation
+app.set("query parser", (str) => qs.parse(str));
 // Middleware
 app.use(express.json());
 if (process.env.NODE_ENV === "development") {
